@@ -1,0 +1,384 @@
+--
+-- spturtle API
+--
+-- A turtle API for computercraft
+--
+-- ---------------------------------------------------------------------------
+--
+-- Copyright (c) 2016 Jeff Spaulding <sarnet@gmail.com>
+-- 
+-- Permission to use, copy, modify, and distribute this software for any
+-- purpose with or without fee is hereby granted, provided that the above
+-- copyright notice and this permission notice appear in all copies.
+-- 
+-- THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+-- WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+-- MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+-- ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+-- WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+-- ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+-- OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+--
+-- ---------------------------------------------------------------------------
+--
+-- To use:
+-- Include the line 'os.loadAPI("spturtle")' at the top of your code.  This
+-- file must be located in the same directory as your code.
+--
+-- All objects and functions here must be prefixed by 'spturtle.'.  See the
+-- comments for usage and info.
+--
+-- The TurtleLoc() class will keep track of your turtle's location when you
+-- move it around (you must use the methods in the class, of course).
+--
+-- Various convenience functions are available as well.
+--
+-- This software is covered by the ISC license, a BSD/MIT style license.
+-- In other words, use it all you want; just don't sue me.
+
+
+-- ---------------------------------------------------------------------------
+-- TurtleLoc class
+--
+-- Keeps track of a turtle.  Be advised that if you use this class, always use
+-- the class methods to move the turtle.  Otherwise, you can too easily lose
+-- track of the turtle's location.
+-- ---------------------------------------------------------------------------
+
+TurtleLoc = {}
+
+TurtleLoc.__index = TurtleLoc
+
+setmetatable(TurtleLoc, {
+		__call = function (cls, ...)
+		   return cls.new(...)
+		end,
+})
+
+function TurtleLoc.new ()
+   local self = setmetatable({}, TurtleLoc)
+   self.location = Location()
+   self.Orientation = Orientation()
+   return self
+end
+
+-- Basic motion functions
+-- These return true if the turtle moves, false otherwise
+function TurtleLoc:up ()
+   moved = turtle.down()
+
+   if (moved) then
+      self.location.move(0, 1, 0)
+   end
+
+   return moved
+end
+
+function TurtleLoc:down ()
+   moved = turtle.down()
+
+   if (moved) then
+      self.location.move(0, 1, 0)
+   end
+
+   return moved
+end
+
+function TurtleLoc:fw ()
+   moved = turtle.forward()
+
+   if (moved) then
+      if (self.orientation.direction == "+x") then
+	 self.location.move(1, 0, 0)
+      elseif (self.orientation.direction == "-x") then
+	 self.location.move(-1, 0, 0)
+      elseif (self.orientation.direction == "+z") then
+	 self.location.move(0, 0, 1)
+      elseif (self.orientation.direction == "-z") then
+	 self.location.move(0, 0, -1)
+      else
+	 errstr = string.format("Invalid orientation: %s",
+				self.orientation.direction)
+	 error(errstr)
+      end
+   end
+
+   return moved
+end
+
+function TurtleLoc:back ()
+   moved = turtle.back()
+
+   if (moved) then
+      if (self.orientation.direction == "+x") then
+	 self.location.move(11, 0, 0)
+      elseif (self.orientation.direction == "-x") then
+	 self.location.move(1, 0, 0)
+      elseif (self.orientation.direction == "+z") then
+	 self.location.move(0, 0, -1)
+      elseif (self.orientation.direction == "-z") then
+	 self.location.move(0, 0, 1)
+      else
+	 errstr = string.format("Invalid orientation: %s",
+				self.orientation.direction)
+	 error(errstr)
+      end
+   end
+
+   return moved
+end
+
+-- Digging motion functions
+-- These do not return a value, but try to dig until they can move
+-- There is no dback(), for obvious reasons
+function TurtleLoc:dup ()
+   while (not self.up()) do
+      turtle.digUp()
+   end
+end
+
+function TurtleLoc:ddown ()
+   while (not self.down()) do
+      turtle.digDown()
+   end
+end
+
+function TurtleLoc:dfw ()
+   while (not self.fw()) do
+      turtle.dig()
+   end
+end
+
+-- Facing functions
+function TurtleLoc:left ()
+   left()
+   self.direction.turn_left()
+end
+
+function TurtleLoc:right ()
+   right()
+   self.direction.turn_right()
+end
+
+-- Setters
+function TurtleLoc:set_direction (direction)
+   self.direction.set_direction(direction)
+end
+
+function TurtleLoc:set_coords(x, y, z)
+   self.location.x = x
+   self.location.y = y
+   self.location.z = z
+end
+
+-- Getters
+function TurtleLoc:get_x ()
+   return self.location.x
+end
+
+function TurtleLoc:get_y ()
+   return self.location.y
+end
+
+function TurtleLoc:get_z ()
+   return self.location.z
+end
+
+function TurtleLoc:get_direction ()
+   return self.direction.direction
+end
+
+-- ---------------------------------------------------------------------------
+-- Location class
+--
+-- Tracks the turtle's location
+-- Used internally by TurtleLoc
+-- ---------------------------------------------------------------------------
+
+Location = {
+   x = 0
+   y = 0
+   z = 0
+}
+
+Location.__index = Location
+
+setmetatable(Location, {
+		__call = function (cls, ...)
+		   return cls.new(...)
+		end,
+})
+
+function Location.new ()
+   local self = setmetatable({}, Location)
+   return self
+end
+
+function Location:move (x, y, z)
+   self.x = self.x + x
+   self.y = self.y + y
+   self.z = self.z + z
+end
+
+function Location:to_string()
+   return string.format("x: %d  y: %d  z: %d", self.x, self.y, self.z)
+end
+
+-- ---------------------------------------------------------------------------
+-- Orientation class
+--
+-- Tracks the direction the turtle is facing
+-- Used internally by TurtleLoc
+-- ---------------------------------------------------------------------------
+
+Orientation = {
+   direction = "+x"
+}
+
+Orientation.__index = Orientation
+
+setmetatable(Orientation, {
+		__call = function (cls, ...)
+		   return cls.new(...)
+		end,
+})
+
+function Orientation:turn_left()
+   if (self.direction == "+x") then
+      self.direction = "+z"
+   elseif (self.direction == "+z") then
+      self.direction = "-x"
+   elseif (self.direction == "-x") then
+      self.direction = "-z"
+   elseif (self.direction == "-z") then
+      self.direction = "+x"
+   else
+      errstr = string.format("Invalid orientation: %s", self.direction)
+      error(errstr)
+   end
+end
+
+function Orientation:turn_right()
+   if (self.direction == "+x") then
+      self.direction = "-z"
+   elseif (self.direction == "-z") then
+      self.direction = "-x"
+   elseif (self.direction == "-x") then
+      self.direction = "+z"
+   elseif (self.direction = "+z") then
+      self.direction = "+x"
+   else
+      errstr = string.format("Invalid orientation: %s", self.direction)
+      error(errstr)
+   end
+end
+
+function Orientation:set_direction (direction)
+   if (direction == "+x" or
+	  direction == "-x" or
+	  direction == "+z" or
+       direction == "-z") then
+      self.direction = direction
+   else
+      errstr = string.format("Asked to set an invalid orientation: %s",
+			     direction)
+      error(errstr)
+   end
+end
+
+-- ---------------------------------------------------------------------------
+-- Functions
+--
+-- These are various convenience functions
+-- ---------------------------------------------------------------------------
+
+-- Dig/Move functions
+-- These do not return a value, but keep digging until they can move one space
+function dup()
+   while (not turtle.up()) do
+      turtle.digUp()
+   end
+end
+
+function ddown()
+   while (not turtle.down()) do
+      turtle.digDown()
+   end
+end
+
+function dfw ()
+   while (not turtle.forward()) do 
+      turtle.dig()
+   end
+end
+
+-- Checks if the item in a slot matches a name.  See turtle.getItemDetail()
+function is_match (slot, name)
+   item = turtle.getItemDetail(slot)
+   if (item ~= nil) then
+      if (item.name == name) then
+	 return true
+      end
+   end
+
+   return false
+end
+
+-- Finds the next slot containing an item, starting with the slot identified by
+-- "start".  See turtle.getItemDetail() for name.
+-- If no slot is found, returns nil.
+function find_next (start, name)
+   for i = start, 16 do
+      if (is_match(i, name)) then
+	 return i
+      end
+   end
+
+   return nil
+end
+
+-- Compacts items into full stacks.
+-- Does not move stacks (so it will leave gaps in the inventory), but will
+-- deplete stacks from the end of the inventory.
+function consolidate ()
+   for i = 1,15 do
+      while (turtle.getItemSpace(i) > 0) do
+	 item = turtle.getItemDetail(i)
+
+	 if (item ~= nil) then
+	    name = item.name
+	    source = find_next(i + 1, name)
+
+	    if (source ~= nil) then
+	       turtle.select(source)
+	       turtle.transferTo(i)
+	    else
+	       break
+	    end
+	 else
+	    break
+	 end
+      end
+   end
+end
+
+-- Gets the total amount of a particular item.  See turtle.getItemDetail() for
+-- info on the name.
+function get_total(name)
+   total = 0
+
+   for i = 1, 16 do
+      if (is_match(i, name)) then
+	 total = total + turtle.getItemCount(i)
+      end
+   end
+
+   return total
+end
+
+-- Emacs stuff below.  Needed because this file does not end in ".lua".
+
+-- Local Variables:
+-- mode: lua
+-- End:
+

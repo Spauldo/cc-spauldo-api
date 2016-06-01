@@ -1,0 +1,103 @@
+#+TITLE: Spauldo's ComputerCraft APIs
+
+#+BEGIN_COMMENT
+
+This file is in org-mode format, which is an Emacs thing.  Think markdown on steroids.  See http://orgmode.org for details.
+
+It should be readable as plain text, though, although the occasional funky characters are required for proper export (for instance, ~code~ exports to "\texttt{code}" in LaTeX and <code>code</code> in HTML).
+
+#+END_COMMENT
+
+This is a collection of ComputerCraft APIs and related code.
+
+* spturtle API
+
+  The ~spturtle~ API contains various functions and classes useful for working with turtles.
+
+** TurtleLoc Class
+
+   ~TurtleLoc~ is a class that represents a turtle's location and direction.
+   
+   This class starts at the point 0, 0, 0 facing in the positive x direction.  If your code needs to use the actual coordinates, they can be set using the ~set_direction()~ and ~set_coords()~ functions.  Depending on what you are doing, however, this may not be necessary.
+   
+   This class does not have a method of getting the in-world direction or location, so you must set those by other means.
+
+   *IMPORTANT:* if you use this class to keep track of your turtle, *do not* use any other movement functions, ~turtle.turnLeft()~ or ~turtle.turnRight()~.
+
+   Methods:
+   - Movement:
+     - ~TurtleLoc.up()~
+     - ~TurtleLoc.down()~
+     - ~TurtleLoc.fw()~
+     - ~TurtleLoc.back()~
+
+       These methods move your turtle in the desired direction.  They return ~true~ if successful, ~false~ otherwise.
+
+   - Movement with digging:
+     - ~TurtleLoc.dup()~
+     - ~TurtleLoc.ddown()~
+     - ~TurtleLoc.dfw()~
+       
+       These methods move your turtle, but dig if there is anything in the way.  They will continue to attempt to dig as long as they are unable to move.  Don't try this against unbreakable blocks.
+
+   - Facing:
+     - ~TurtleLoc.left()~
+     - ~TurtleLoc.right()~
+       
+       These methods turn your turtle left or right.
+
+   - Setters
+     - ~TurtleLoc.set_direction(direction)~
+       
+       This method will manually set the direction the turtle is facing.  Use this to set the direction when creating a new ~TurtleLoc~ object.  See ~TurtleLoc.get_direction()~ for valid values.
+
+     - ~TurtleLoc.set_coords(x, y, z)~
+
+       This method sets the current coordinates of the turtle.  Use this to set the coordinates when creating a new ~TurtleLoc~ object.
+
+   - Getters
+     - ~TurtleLoc.get_x()~
+     - ~TurtleLoc.get_y()~
+     - ~TurtleLoc.get_z()~
+
+       Returns the requested coordinate.
+
+     - ~TurtleLoc.get_direction()~
+       
+       Returns the direction the turtle is facing.  Will be one of the following: "+x", "-x", "+z", "-z".
+
+** Functions
+
+   A number of convenience functions are included.
+
+   - ~dup()~ 
+
+     This function will dig upward until it can move one space.  It does not return a value.
+
+   - ~ddown()~
+
+     This function will dig downward until it can move one space.  It does not return a value.
+
+   - ~dfw()~
+
+     This function will dig forward until it can move one space.  It does not return a value.
+
+   - ~is_match(slot, name)~
+
+     This function returns true if the item in ~slot~ has the name ~name~.  See ~turtle.getItemDetail()~ for information on the format ~name~ should be in.
+
+   - ~find_next(start, name)~
+
+     This function returns the slot number containing the item identified by ~name~, starting with the slot number ~start~.  If the item is not found, this function returns ~nil~.
+
+   - ~consolidate()~
+
+     This function will fill stacks with items from stacks further into the inventory.  It does not move stacks, although it may empty them.  It will leave gaps in the inventory alone.
+
+     This function does not return a value.
+
+     Note that this will not interfere with things like chests or tools, so if you keep an ender chest in a particular slot, this will not move it.
+
+   - ~get_total(name)~
+
+     This function returns the total number of a particular item.  See ~turtle.getItemDetail()~ for the value to use for ~name~.
