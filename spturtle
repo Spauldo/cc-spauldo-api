@@ -56,20 +56,21 @@ setmetatable(TurtleLoc, {
 		end,
 })
 
-function TurtleLoc.new ()
-   local self = setmetatable({}, TurtleLoc)
-   self.location = Location()
-   self.Orientation = Orientation()
+function TurtleLoc:new ()
+   local self = setmetatable({location = Location(),
+			      orientation = Orientation()}, TurtleLoc)
+   -- self.location = Location()
+   -- self.orientation = Orientation()
    return self
 end
 
 -- Basic motion functions
 -- These return true if the turtle moves, false otherwise
 function TurtleLoc:up ()
-   moved = turtle.down()
+   moved = turtle.up()
 
    if (moved) then
-      self.location.move(0, 1, 0)
+      self.location:move(0, 1, 0)
    end
 
    return moved
@@ -79,7 +80,7 @@ function TurtleLoc:down ()
    moved = turtle.down()
 
    if (moved) then
-      self.location.move(0, 1, 0)
+      self.location:move(0, -1, 0)
    end
 
    return moved
@@ -90,13 +91,13 @@ function TurtleLoc:fw ()
 
    if (moved) then
       if (self.orientation.direction == "+x") then
-	 self.location.move(1, 0, 0)
+	 self.location:move(1, 0, 0)
       elseif (self.orientation.direction == "-x") then
-	 self.location.move(-1, 0, 0)
+	 self.location:move(-1, 0, 0)
       elseif (self.orientation.direction == "+z") then
-	 self.location.move(0, 0, 1)
+	 self.location:move(0, 0, 1)
       elseif (self.orientation.direction == "-z") then
-	 self.location.move(0, 0, -1)
+	 self.location:move(0, 0, -1)
       else
 	 errstr = string.format("Invalid orientation: %s",
 				self.orientation.direction)
@@ -112,13 +113,13 @@ function TurtleLoc:back ()
 
    if (moved) then
       if (self.orientation.direction == "+x") then
-	 self.location.move(11, 0, 0)
+	 self.location:move(11, 0, 0)
       elseif (self.orientation.direction == "-x") then
-	 self.location.move(1, 0, 0)
+	 self.location:move(1, 0, 0)
       elseif (self.orientation.direction == "+z") then
-	 self.location.move(0, 0, -1)
+	 self.location:move(0, 0, -1)
       elseif (self.orientation.direction == "-z") then
-	 self.location.move(0, 0, 1)
+	 self.location:move(0, 0, 1)
       else
 	 errstr = string.format("Invalid orientation: %s",
 				self.orientation.direction)
@@ -152,18 +153,18 @@ end
 
 -- Facing functions
 function TurtleLoc:left ()
-   left()
-   self.direction.turn_left()
+   turtle.turnLeft()
+   self.orientation:turn_left()
 end
 
 function TurtleLoc:right ()
-   right()
-   self.direction.turn_right()
+   turtle.turnRight()
+   self.orientation:turn_right()
 end
 
 -- Setters
 function TurtleLoc:set_direction (direction)
-   self.direction.set_direction(direction)
+   self.orientation:set_direction(direction)
 end
 
 function TurtleLoc:set_coords(x, y, z)
@@ -186,7 +187,7 @@ function TurtleLoc:get_z ()
 end
 
 function TurtleLoc:get_direction ()
-   return self.direction.direction
+   return self.orientation.direction
 end
 
 -- ---------------------------------------------------------------------------
@@ -196,11 +197,7 @@ end
 -- Used internally by TurtleLoc
 -- ---------------------------------------------------------------------------
 
-Location = {
-   x = 0
-   y = 0
-   z = 0
-}
+Location = {}
 
 Location.__index = Location
 
@@ -210,8 +207,11 @@ setmetatable(Location, {
 		end,
 })
 
-function Location.new ()
-   local self = setmetatable({}, Location)
+function Location:new ()
+   local self = setmetatable({x = 0, y = 0, z = 0}, Location)
+   -- self.x = 0
+   -- self.y = 0
+   -- self.z = 0
    return self
 end
 
@@ -232,9 +232,7 @@ end
 -- Used internally by TurtleLoc
 -- ---------------------------------------------------------------------------
 
-Orientation = {
-   direction = "+x"
-}
+Orientation = {}
 
 Orientation.__index = Orientation
 
@@ -243,6 +241,12 @@ setmetatable(Orientation, {
 		   return cls.new(...)
 		end,
 })
+
+function Orientation:new()
+   local self = setmetatable({direction = "+x"}, Orientation)
+   -- self.direction = "+x"
+   return self
+end
 
 function Orientation:turn_left()
    if (self.direction == "+x") then
@@ -266,7 +270,7 @@ function Orientation:turn_right()
       self.direction = "-x"
    elseif (self.direction == "-x") then
       self.direction = "+z"
-   elseif (self.direction = "+z") then
+   elseif (self.direction == "+z") then
       self.direction = "+x"
    else
       errstr = string.format("Invalid orientation: %s", self.direction)
